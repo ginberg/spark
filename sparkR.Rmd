@@ -31,7 +31,7 @@ sqlContext <- sparkRSQL.init(sc)
 ## Handle a large file
 
 I have chosen a dataset with a size, that is difficult to read directly in R, but should not be too big for memory. The dataset is about crimes in Chicago and can be downloaded from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2, it is about 1.4GB
-When reading this file in RStudio with the read.csv function on my labtop, it takes about 7 minutes. At that point, the only thing I have done is read the data into memory, so the analysing and plotting time is not included.
+When reading this file in RStudio with the read.csv function on my labtop, it takes about 7 minutes. At that point, the only thing I have done is read the data into memory, so the analysing and plotting time is not included. 
 This webpage, including reading, processing the file and create the plot, is generated within 1 minute! Below, you can find the code to read and process the data and plot the result.
 
 ```{r pressure}
