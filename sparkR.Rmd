@@ -1,0 +1,60 @@
+---
+title: "Use Spark with R to handle large files"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+Recently I saw a great webcast about the [Spark connector for R](https://www.youtube.com/watch?v=nrmASvsU-lo). Since I am working with R and learning Apache Spark was already on my TODO-list, I tried it out.
+Why would you use Spark in combination with R?
+Well, R and RSstudio are great tools but as you probably know, it can't handle very large datasets very well. This is caused by the fact that R was designed to use only a single thread. Spark, however is multi-threaded, so it can be more efficient to do your large file processing in Spark.
+In this post, I will show to run Spark on your localhost, perform some action on a fairly large dataset (1.4GB) and use the result in R.
+
+## Setup SparkR
+
+SparkR can be downloaded from the [Apache Spark website](http://spark.apache.org/downloads.html)
+I have downloaded version 1.6.1 with pre-build for Hadoop 2.6 and later. SparkR can be run either from command line or from RStudio. Since I am mostly using RStudio, I will use the latter.
+
+```{r spark}
+Sys.setenv(SPARK_HOME = "/home/ger/development/spark-1.6.1-bin-hadoop2.6")
+Sys.setenv(SPARKR_SUBMIT_ARGS="--packages com.databricks:spark-csv_2.11:1.4.0 sparkr-shell")
+.libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R","lib"),  .libPaths()))
+library(SparkR)
+
+#create context
+sc <- sparkR.init(master = "local")
+sqlContext <- sparkRSQL.init(sc)
+```
+
+## Handle a large file
+
+I have chosen a dataset with a size, that is difficult to read directly in R, but should not be too big for memory. The dataset is about crimes in Chicago and can be downloaded from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2, it is about 1.4GB
+When reading this file in RStudio with the read.csv function on my labtop, it takes about 7 minutes. At that point, the only thing I have done is read the data into memory, so the analysing and plotting time is not included.
+This webpage, including reading, processing the file and create the plot, is generated within 1 minute! Below, you can find the code to read and process the data and plot the result.
+
+```{r pressure}
+library(magrittr)
+library(ggplot2)
+
+#read the data
+DF <- read.df(sqlContext, file.path(Sys.getenv("SPARK_HOME"), "datasets/crimes.csv"), source = "csv", header="true")
+# add the data to a temp table to be able to use SQL
+registerTempTable(DF, "crimes")
+# define spark DataFrame with amount of crimes per year
+groupedDF <- sqlContext %>% sql("select Year, count(*) as count from crimes group by Year")
+
+#transfer to R. Since Spark is lazy, actual work is performed now!
+grouped_df <- collect(groupedDF)
+# stop spark
+sparkR.stop()
+
+#plot data in R
+ggplot(data = grouped_df, aes(x= Year, y=count)) + geom_point() + geom_line(group=1) + ggtitle("Amount of crimes in Chicago per year")
+```
+
+## Remarks
+I know there are some other packages in R, that can also be used to parallelize and speed up the processing.
+However, the nice thing with Spark is that it can also run on a cluster and thus scales well. Imagine, a dataset of 10TB, then the same approach can be used. Of course, in that case Spark should run on a cluster and not on my labtop:-)
+
