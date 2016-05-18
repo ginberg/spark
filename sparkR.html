@@ -112,7 +112,7 @@ $(document).ready(function () {
 </div>
 
 
-<p>Recently I saw a great webcast about the <a href="https://www.youtube.com/watch?v=nrmASvsU-lo">Spark connector for R</a>. Since I am working with R and learning Apache Spark was already on my TODO-list, I tried it out. Why would you use Spark in combination with R? Well, R and RSstudio are great tools but as you probably know, it can’t handle very large datasets very well. This is caused by the fact that R was designed to use only a single thread. Spark, however is multi-threaded, so it can be more efficient to do your large file processing in Spark. In this post, I will show to run Spark on your localhost, perform some action on a fairly large dataset (1.4GB) and use the result in R.</p>
+<p>Recently I saw a great webcast about the <a href="https://www.youtube.com/watch?v=nrmASvsU-lo">Spark connector for R</a>. Since I am working with R and learning Apache Spark was already on my TODO-list, I tried it out. Why would you use Apache Spark ("Lightning-fast cluster computing") in combination with R? Well, R and RSstudio are great tools but as you probably know, it can’t handle very large datasets very well. This is caused by the fact that R was designed to use only a single thread. Spark, however is multi-threaded, so it can be more efficient to do your large file processing in Spark. In this post, I will show to run Spark on your localhost, perform some action on a fairly large dataset (1.4GB) and use the result in R.</p>
 <div id="setup-sparkr" class="section level2">
 <h2>Setup SparkR</h2>
 <p>SparkR can be downloaded from the <a href="http://spark.apache.org/downloads.html">Apache Spark website</a> I have downloaded version 1.6.1 with pre-build for Hadoop 2.6 and later. SparkR can be run either from command line or from RStudio. Since I am mostly using RStudio, I will use the latter.</p>
@@ -171,7 +171,7 @@ end.time - start.time</code></pre>
 </div>
 <div id="remarks" class="section level2">
 <h2>Remarks</h2>
-<p>I know there are some other packages in R, that can also be used to parallelize and speed up the processing. However, the nice thing with Spark is that it can also run on a cluster and thus scales well. Imagine, a dataset of 10TB, then the same approach can be used. Of course, in that case Spark should run on a cluster and not on my labtop:-)</p>
+<p>I didn't expect, such a big difference in time, it is impressive. I know there are some other packages in R, that can also be used to parallelize and speed up the processing. However, the nice thing with Spark is that it can also run on a cluster and thus scales well. Imagine, a dataset of 10TB, then the same approach can be used. Of course, in that case Spark should run on a cluster and not on my labtop:-)</p>
 </div>
 
 
