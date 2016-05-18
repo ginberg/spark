@@ -23,22 +23,41 @@ Sys.setenv(SPARKR_SUBMIT_ARGS="--packages com.databricks:spark-csv_2.11:1.4.0 sp
 .libPaths(c(file.path(Sys.getenv("SPARK_HOME"), "R","lib"),  .libPaths()))
 library(SparkR)
 
-#create context
-sc <- sparkR.init(master = "local")
+#create context on localhost, use as many worker threads as logical cores on machine.
+sc <- sparkR.init(master = "local[*]")
 sqlContext <- sparkRSQL.init(sc)
 ```
 
 ## Handle a large file
 
-I have chosen a dataset with a size, that is difficult to read directly in R, but should not be too big for memory. The dataset is about crimes in Chicago and can be downloaded from https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2, it is about 1.4GB
-When reading this file in RStudio with the read.csv function on my labtop, it takes about 7 minutes. At that point, the only thing I have done is read the data into memory, so the analysing and plotting time is not included. 
-This webpage, including reading, processing the file and create the plot, is generated within 1 minute! Below, you can find the code to read and process the data and plot the result.
+I have chosen a dataset with a size, that is difficult to read directly in R, but should not be too big for memory. The dataset is about crimes in Chicago and can be downloaded from the [city of chicago](https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2), it is about 1.4GB
 
-```{r pressure}
-library(magrittr)
+###Plain R - read.csv
+
+First, I will read the data in the common way, via the read.csv function. Next, the data is grouped by year and plotted with ggplot.
+The time it takes to perform these actions is measured.
+
+```{r plainR}
+library(sqldf)
 library(ggplot2)
+library(magrittr)
 
-#read the data
+start.time <- Sys.time()
+df <- read.csv(file.path(Sys.getenv("SPARK_HOME"), "datasets/crimes.csv"))
+grouped_df <- sqldf("select Year, count(*) as count from df group by Year")
+ggplot(data = grouped_df, aes(x= Year, y=count)) + geom_point() + geom_line(group=1) + ggtitle("Amount of crimes in Chicago per year")
+end.time <- Sys.time()
+end.time - start.time
+```
+
+###SparkR
+
+Now, let's create the same plot but use Spark for processing the data. Hopefully it will be quicker than plain R.
+Below the code and time it takes to perform these actions with SparkR.
+
+```{r sparkR}
+start.time <- Sys.time()
+#read the data into a Spark DataFrame (capitals)
 DF <- read.df(sqlContext, file.path(Sys.getenv("SPARK_HOME"), "datasets/crimes.csv"), source = "csv", header="true")
 # add the data to a temp table to be able to use SQL
 registerTempTable(DF, "crimes")
@@ -52,6 +71,8 @@ sparkR.stop()
 
 #plot data in R
 ggplot(data = grouped_df, aes(x= Year, y=count)) + geom_point() + geom_line(group=1) + ggtitle("Amount of crimes in Chicago per year")
+end.time <- Sys.time()
+end.time - start.time
 ```
 
 ## Remarks
